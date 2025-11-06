@@ -1,2 +1,0 @@
-fn(axum::extract::Path<u64>, State<AppState>) -> impl Future<Output = axum::Json<ApiResponse<GridItem>>> {routes::grid::get}
-fn(axum::extract::Path<u64>, State<AppState>) -> impl Future<Output = axum::Json<ApiResponse<GridItem>>> {routes::grid::get}: Handler<_, _>

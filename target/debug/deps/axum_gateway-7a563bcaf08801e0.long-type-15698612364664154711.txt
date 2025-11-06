@@ -1,2 +1,0 @@
-fn(State<AppState>, axum::Json<routes::grid::CreateGridItem>) -> impl Future<Output = (axum::http::StatusCode, axum::Json<ApiResponse<GridItem>>)> {create}
-fn(State<AppState>, axum::Json<routes::grid::CreateGridItem>) -> impl Future<Output = (axum::http::StatusCode, axum::Json<ApiResponse<GridItem>>)> {create}: Handler<_, _>
