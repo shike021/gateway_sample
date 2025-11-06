@@ -1,0 +1,1 @@
+fn(State<AppState>) -> impl Future<Output = axum::Json<ApiResponse<Vec<GridItem>>>> {list}: Handler<_, _>
