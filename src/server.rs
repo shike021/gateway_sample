@@ -7,8 +7,13 @@ use std::net::SocketAddr;
 use std::sync::{Arc, RwLock};
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use jsonrpc_core::IoHandler;
+use jsonrpc_core::{IoHandler, Value};
+use jsonrpc_derive::rpc;
 use jsonrpc_http_server::{ServerBuilder, hyper::server::conn::AddrIncoming};
+use serde_json::json;
+use tonic::transport::Server;
+use crate::handlers::grpc_user_info::UserInfoService;
+use crate::protos::user_info::user_info_service_server::UserInfoServiceServer;
 
 // 引入路由模块
 use crate::routes;
@@ -41,9 +46,64 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::info!("Starting server on {}", addr);
 
-    // 启动服务器
-    let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
+    // 启动REST API服务器
+    let rest_server = tokio::spawn(async move {
+        let listener = tokio::net::TcpListener::bind(addr).await?;
+        axum::serve(listener, app).await?;
+        Ok::<_, Box<dyn std::error::Error>>(())
+    });
+
+    // 启动JSON-RPC服务器（监听4000端口）
+    let rpc_addr = SocketAddr::from(([127, 0, 0, 1], 4000));
+    let mut io = IoHandler::new();
+    
+    // 添加用户信息相关的RPC方法
+    io.add_method("get_user_info", |_params| async move {
+        Ok(json!({
+            "name": "John Doe",
+            "age": 30,
+            "email": "john@example.com",
+            "status": "active"
+        }))
+    });
+    
+    io.add_method("update_user_info", |params| async move {
+        let name = params.get("name").and_then(|v| v.as_str()).unwrap_or("");
+        let age = params.get("age").and_then(|v| v.as_u64()).unwrap_or(0);
+        Ok(json!({
+            "success": true,
+            "message": format!("用户信息已更新: {} ({}岁)", name, age)
+        }))
+    });
+    
+    io.add_method("verify_credentials", |params| async move {
+        let username = params.get("username").and_then(|v| v.as_str()).unwrap_or("");
+        let password = params.get("password").and_then(|v| v.as_str()).unwrap_or("");
+        Ok(json!({
+            "authenticated": username == "admin" && password == "123456",
+            "token": "sample-jwt-token"
+        }))
+    });
+    
+    tracing::info!("Starting JSON-RPC server on {}", rpc_addr);
+    let rpc_server = ServerBuilder::new(io)
+        .start_http(&rpc_addr)
+        .expect("Unable to start RPC server");
+    
+    // 启动GRPC服务器（监听5000端口）
+    let grpc_addr = "[::1]:5000".parse().unwrap();
+    let grpc_server = Server::builder()
+        .add_service(UserInfoServiceServer::new(UserInfoService::default()))
+        .serve(grpc_addr);
+    
+    tracing::info!("Starting GRPC server on {}", grpc_addr);
+    let grpc_server = tokio::spawn(async move {
+        grpc_server.await?;
+        Ok::<_, Box<dyn std::error::Error>>(())
+    });
+    
+    // 等待三个服务器完成
+    tokio::try_join!(rest_server, async { rpc_server.wait(); Ok(()) }, grpc_server)?;
     
     Ok(())
 }

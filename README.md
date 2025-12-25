@@ -63,3 +63,31 @@ DELETE /grid/:id
 - [Axum](https://crates.io/crates/axum) - Web 框架
 - [Tokio](https://crates.io/crates/tokio) - 异步运行时
 - [Serde](https://crates.io/crates/serde) - 序列化/反序列化库
+
+## 支持的API协议
+
+### REST API
+- 端口: 8000
+- 功能: 提供基础的RESTful接口
+- 示例调用:
+  ```bash
+  curl -X GET http://localhost:8000/api/grid
+  ```
+
+### JSON-RPC API
+- 端口: 8001
+- 功能: 提供JSON-RPC 2.0规范的接口
+- 示例调用:
+  ```bash
+  curl -X POST http://localhost:8001/jsonrpc \
+    -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","method":"say_hello","params":[],"id":1}'
+  ```
+
+### gRPC API
+- 端口: 50051
+- 功能: 提供高性能的gRPC接口
+- 示例调用(使用grpcurl):
+  ```bash
+  grpcurl -plaintext -d '{"name":"World"}' localhost:50051 helloworld.Greeter/SayHello
+  ```

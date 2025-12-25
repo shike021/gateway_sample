@@ -4,10 +4,13 @@ use axum::Router;
 use crate::handlers;
 
 pub mod grid;
+pub mod json_rpc;
 
 /// 整合所有路由
 pub fn app_routes() -> Router<crate::server::AppState> {
-    Router::new().merge(grid_routes())
+    Router::new()
+        .merge(grid_routes())
+        .merge(json_rpc::rpc_routes())
 }
 
 /// 获取网格路由
