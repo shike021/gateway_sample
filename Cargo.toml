@@ -16,3 +16,10 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 jsonrpc-core = "18.0.0"
 jsonrpc-http-server = "18.0.0"
 jsonrpc-derive = "18.0.0"
+tonic = "0.14.2"
+tonic-build = "0.14.2"
+prost = "0.14.1"
+prost-types = "0.14.1"
+
+[build-dependencies]
+tonic-build = "0.14.2"

@@ -12,8 +12,8 @@ use jsonrpc_derive::rpc;
 use jsonrpc_http_server::{ServerBuilder, hyper::server::conn::AddrIncoming};
 use serde_json::json;
 use tonic::transport::Server;
-use crate::handlers::grpc_user_info::UserInfoService;
-use crate::protos::user_info::user_info_service_server::UserInfoServiceServer;
+use crate::handlers::grpc_helloworld::Greeter;
+use crate::protos::helloworld::greeter_server::GreeterServer;
 
 // 引入路由模块
 use crate::routes;
