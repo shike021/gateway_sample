@@ -2,6 +2,7 @@
 //!
 //! 这个文件只负责启动和配置服务，不包含具体的业务逻辑。
 
+mod config;
 mod handlers;
 mod routes;
 mod server;

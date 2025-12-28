@@ -1,0 +1,14 @@
+# Axum Gateway 配置文件
+
+[server]
+# REST API 和 JSON-RPC 服务器地址
+rest_host = "127.0.0.1"
+rest_port = 3000
+
+# gRPC 服务器地址
+grpc_host = "[::1]"
+grpc_port = 5000
+
+[logging]
+# 日志级别：trace, debug, info, warn, error
+level = "debug"

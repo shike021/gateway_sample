@@ -23,7 +23,7 @@ pub struct ApiResponse<T> {
 #[allow(dead_code)]
 /// 获取所有网格项
 pub async fn list(State(state): State<AppState>) -> Json<ApiResponse<Vec<GridItemResponse>>> {
-    let items = state.grid_items.read().unwrap();
+    let items = state.grid_items.read().expect("Failed to acquire read lock on grid_items");
     let response_items: Vec<GridItemResponse> = items
         .iter()
         .map(|item| GridItemResponse {
@@ -48,7 +48,7 @@ pub async fn get_by_id(
     Path(id): Path<u64>,
     State(state): State<AppState>,
 ) -> Json<ApiResponse<GridItemResponse>> {
-    let items = state.grid_items.read().unwrap();
+    let items = state.grid_items.read().expect("Failed to acquire read lock on grid_items");
     let item = items.iter().find(|item| item.id == id);
 
     match item {
@@ -77,9 +77,8 @@ pub async fn create(
     State(state): State<AppState>,
     Json(payload): Json<CreateGridItem>,
 ) -> (StatusCode, Json<ApiResponse<GridItemResponse>>) {
-    let mut items = state.grid_items.write().unwrap();
+    let mut items = state.grid_items.write().expect("Failed to acquire write lock on grid_items");
 
-    // 生成新的 ID（简单实现）
     let new_id = items.iter().map(|item| item.id).max().unwrap_or(0) + 1;
 
     let new_item = GridItem {
@@ -117,7 +116,7 @@ pub async fn update(
     State(state): State<AppState>,
     Json(payload): Json<UpdateGridItem>,
 ) -> (StatusCode, Json<ApiResponse<GridItemResponse>>) {
-    let mut items = state.grid_items.write().unwrap();
+    let mut items = state.grid_items.write().expect("Failed to acquire write lock on grid_items");
     let item = items.iter_mut().find(|item| item.id == id);
 
     match item {
@@ -169,7 +168,7 @@ pub async fn delete_by_id(
     Path(id): Path<u64>,
     State(state): State<AppState>,
 ) -> Json<ApiResponse<()>> {
-    let mut items = state.grid_items.write().unwrap();
+    let mut items = state.grid_items.write().expect("Failed to acquire write lock on grid_items");
     let initial_len = items.len();
     items.retain(|item| item.id != id);
 
