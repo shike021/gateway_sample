@@ -36,6 +36,7 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
     // 初始化应用状态
     let state = AppState {
         grid_items: Arc::new(RwLock::new(Vec::new())),
+        rpc_handler: Arc::new(routes::json_rpc::create_rpc_handler()),
     };
 
     // 构建应用路由

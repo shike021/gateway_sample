@@ -80,6 +80,32 @@ axum_gateway/
     -d '{"jsonrpc":"2.0","method":"verify_credentials","params":["user123","password123"],"id":3}'
   ```
 
+#### 实现方式说明
+
+**当前实现**：
+- 使用 `jsonrpc-core` 库 + Axum 的 RESTful 路由处理
+- JSON-RPC 请求通过 Axum 的 POST 端点接收，然后委托给 jsonrpc-core 的 IoHandler 处理
+- 优点：与 Axum 完全集成，共享中间件（CORS、日志等），统一端口管理，部署简单
+- 缺点：每次请求需要创建 IoHandler（可优化为缓存），需要手动处理 JSON 序列化
+
+**其他可选实现方式**：
+
+1. **jsonrpc-v2 + Axum**
+   - 更好的类型安全和异步支持
+   - API 更简洁，错误处理更完善
+   - 需要引入额外依赖
+
+2. **独立的 jsonrpc-http-server**
+   - 开箱即用的 JSON-RPC 服务器
+   - 需要独立端口和管理
+   - 无法共享 Axum 中间件
+
+3. **axum-jsonrpc（如果存在）**
+   - 专门为 Axum 设计的 JSON-RPC 集成
+   - 更好的 Axum 生态兼容性
+
+当前选择 jsonrpc-core + Axum 的方式最适合本项目，因为项目需要同时支持 REST、JSON-RPC 和 gRPC 三种协议，统一使用 Axum 可以简化架构和部署。
+
 ### gRPC API
 - **端口**: 5000
 - **功能**: 提供高性能的 gRPC 接口
