@@ -1,7 +1,5 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tonic_build::configure()
-        .build_server(true)
-        .build_client(true)
-        .compile(&["protos/helloworld.proto"], &["protos/"])?;
+    tonic_prost_build::configure()
+        .compile_protos(&["protos/helloworld.proto"], &["protos/"])?;
     Ok(())
 }

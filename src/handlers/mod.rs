@@ -4,3 +4,4 @@
 
 pub mod grid;
 pub mod user_info;
+pub mod grpc_helloworld;

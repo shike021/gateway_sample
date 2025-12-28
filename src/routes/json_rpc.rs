@@ -2,10 +2,9 @@
 //!
 //! 处理 JSON-RPC 相关的请求，将请求转发给业务处理模块。
 
-use axum::{extract::State, response::Json};
+use axum::{extract::State, response::Json, routing::post, Router};
 use jsonrpc_core::{IoHandler, Value};
 use serde_json::json;
-use std::sync::{Arc, RwLock};
 
 use crate::handlers::user_info as rpc;
 use crate::server::AppState;
@@ -17,7 +16,7 @@ pub fn rpc_routes() -> Router<AppState> {
 
 /// 处理 JSON-RPC 请求
 pub async fn handle_rpc(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     Json(payload): Json<Value>,
 ) -> Json<Value> {
     let mut io = IoHandler::new();
@@ -29,5 +28,11 @@ pub async fn handle_rpc(
     
     // 处理请求
     let response = io.handle_request(&payload.to_string()).await;
-    Json(response.unwrap_or(json!({"error": "Invalid request"})))
+    match response {
+        Some(resp) => {
+            let json_value: Value = serde_json::from_str(&resp).unwrap_or_else(|_| json!({"error": "Invalid response"}));
+            Json(json_value)
+        }
+        None => Json(json!({"error": "Invalid request"})),
+    }
 }

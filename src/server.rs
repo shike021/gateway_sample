@@ -2,17 +2,15 @@
 //!
 //! 负责配置和启动 REST API 服务器。
 
-use axum::Router;
 use std::net::SocketAddr;
 use std::sync::{Arc, RwLock};
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use jsonrpc_core::{IoHandler, Value};
-use jsonrpc_derive::rpc;
-use jsonrpc_http_server::{ServerBuilder, hyper::server::conn::AddrIncoming};
+use jsonrpc_core::{IoHandler, Params, Value};
+use jsonrpc_http_server::ServerBuilder;
 use serde_json::json;
 use tonic::transport::Server;
-use crate::handlers::grpc_helloworld::Greeter;
+use crate::handlers::grpc_helloworld::GreeterService;
 use crate::protos::helloworld::greeter_server::GreeterServer;
 
 // 引入路由模块
@@ -50,7 +48,7 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
     let rest_server = tokio::spawn(async move {
         let listener = tokio::net::TcpListener::bind(addr).await?;
         axum::serve(listener, app).await?;
-        Ok::<_, Box<dyn std::error::Error>>(())
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     });
 
     // 启动JSON-RPC服务器（监听4000端口）
@@ -67,7 +65,8 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
         }))
     });
     
-    io.add_method("update_user_info", |params| async move {
+    io.add_method("update_user_info", |params: Params| async move {
+        let params: Value = params.parse().unwrap_or_else(|_| json!({}));
         let name = params.get("name").and_then(|v| v.as_str()).unwrap_or("");
         let age = params.get("age").and_then(|v| v.as_u64()).unwrap_or(0);
         Ok(json!({
@@ -76,7 +75,8 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
         }))
     });
     
-    io.add_method("verify_credentials", |params| async move {
+    io.add_method("verify_credentials", |params: Params| async move {
+        let params: Value = params.parse().unwrap_or_else(|_| json!({}));
         let username = params.get("username").and_then(|v| v.as_str()).unwrap_or("");
         let password = params.get("password").and_then(|v| v.as_str()).unwrap_or("");
         Ok(json!({
@@ -93,17 +93,17 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
     // 启动GRPC服务器（监听5000端口）
     let grpc_addr = "[::1]:5000".parse().unwrap();
     let grpc_server = Server::builder()
-        .add_service(UserInfoServiceServer::new(UserInfoService::default()))
+        .add_service(GreeterServer::new(GreeterService::default()))
         .serve(grpc_addr);
     
     tracing::info!("Starting GRPC server on {}", grpc_addr);
     let grpc_server = tokio::spawn(async move {
         grpc_server.await?;
-        Ok::<_, Box<dyn std::error::Error>>(())
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     });
     
     // 等待三个服务器完成
-    tokio::try_join!(rest_server, async { rpc_server.wait(); Ok(()) }, grpc_server)?;
+    let _ = tokio::try_join!(rest_server, async { rpc_server.wait(); Ok(()) }, grpc_server);
     
     Ok(())
 }

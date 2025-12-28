@@ -6,6 +6,12 @@ mod handlers;
 mod routes;
 mod server;
 
+mod protos {
+    pub mod helloworld {
+        include!(concat!(env!("OUT_DIR"), "/helloworld.rs"));
+    }
+}
+
 use server::start_server;
 
 #[tokio::main]

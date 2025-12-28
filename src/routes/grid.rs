@@ -2,6 +2,8 @@
 //!
 //! 处理网格相关的 HTTP 请求，将请求转发给业务处理模块。
 
+#![allow(unused_imports)]
+
 use axum::{
     extract::{Path, State},
     http::StatusCode,

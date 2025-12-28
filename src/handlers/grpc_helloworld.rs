@@ -1,5 +1,5 @@
 use tonic::{Request, Response, Status};
-use crate::protos::helloworld::*;
+use crate::protos::helloworld::{greeter_server::Greeter, *};
 
 #[derive(Debug, Default)]
 pub struct GreeterService;

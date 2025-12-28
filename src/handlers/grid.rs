@@ -8,7 +8,6 @@ use axum::{
     response::Json,
 };
 use serde::Serialize;
-use std::sync::{Arc, RwLock};
 
 use crate::routes::grid::{GridItem, CreateGridItem, UpdateGridItem, GridItemResponse};
 use crate::server::AppState;
@@ -21,6 +20,7 @@ pub struct ApiResponse<T> {
     pub message: String,
 }
 
+#[allow(dead_code)]
 /// 获取所有网格项
 pub async fn list(State(state): State<AppState>) -> Json<ApiResponse<Vec<GridItemResponse>>> {
     let items = state.grid_items.read().unwrap();
@@ -42,6 +42,7 @@ pub async fn list(State(state): State<AppState>) -> Json<ApiResponse<Vec<GridIte
     })
 }
 
+#[allow(dead_code)]
 /// 获取特定网格项
 pub async fn get_by_id(
     Path(id): Path<u64>,
@@ -70,6 +71,7 @@ pub async fn get_by_id(
     }
 }
 
+#[allow(dead_code)]
 /// 创建新的网格项
 pub async fn create(
     State(state): State<AppState>,
@@ -108,6 +110,7 @@ pub async fn create(
     )
 }
 
+#[allow(dead_code)]
 /// 更新网格项
 pub async fn update(
     Path(id): Path<u64>,
@@ -160,6 +163,7 @@ pub async fn update(
     }
 }
 
+#[allow(dead_code)]
 /// 删除网格项
 pub async fn delete_by_id(
     Path(id): Path<u64>,
