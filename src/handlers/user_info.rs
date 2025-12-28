@@ -1,11 +1,15 @@
-//! JSON-RPC 处理模块
+//! JSON-RPC handler module
 //!
-//! 实现用户信息相关的 JSON-RPC 业务逻辑。
+//! Implements JSON-RPC business logic related to user information.
+//!
+//! Copyright © 2025 imshike@gmail.com
+//! SPDX-License-Identifier: Apache-2.0
+//! Author: imshike@gmail.com
 
 use jsonrpc_core::{Params, Result, Value};
 use serde_json::json;
 
-/// 获取用户信息
+/// Get user information
 pub async fn get_user_info(_params: Params) -> Result<Value> {
     Ok(json!({
         "name": "John Doe",
@@ -15,7 +19,7 @@ pub async fn get_user_info(_params: Params) -> Result<Value> {
     }))
 }
 
-/// 更新用户信息
+/// Update user information
 pub async fn update_user_info(params: Params) -> Result<Value> {
     let params: Value = params.parse()?;
     let name = params.get("name").and_then(|v| v.as_str()).unwrap_or("");
@@ -23,11 +27,11 @@ pub async fn update_user_info(params: Params) -> Result<Value> {
     
     Ok(json!({
         "success": true,
-        "message": format!("用户信息已更新: {} ({}岁)", name, age)
+        "message": format!("User information updated: {} ({} years old)", name, age)
     }))
 }
 
-/// 验证用户凭证
+/// Verify user credentials
 pub async fn verify_credentials(params: Params) -> Result<Value> {
     let params: Value = params.parse()?;
     let username = params.get("username").and_then(|v| v.as_str()).unwrap_or("");

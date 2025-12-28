@@ -1,1 +1,1 @@
-这个目录存放grpc的proto文件。
+This directory contains gRPC proto files.

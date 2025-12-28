@@ -1,134 +1,168 @@
 # Axum Gateway
 
-一个基于 Rust 和 Axum 框架构建的多协议网关服务器，提供 REST API、JSON-RPC 和 gRPC 接口。
+A multi-protocol gateway server built with Rust and the Axum framework, providing REST API, JSON-RPC, and gRPC interfaces.
 
-## 功能特性
+## Features
 
-- 基于 Rust 语言和 Axum Web 框架
-- 支持多种协议：REST API、JSON-RPC、gRPC
-- 模块化架构，路由与业务逻辑分离
-- CORS 支持
-- 易于扩展和维护
+- Built with Rust and the Axum Web framework
+- Supports multiple protocols: REST API, JSON-RPC, gRPC
+- Modular architecture with separated routing and business logic
+- CORS support
+- Easy to extend and maintain
 
-## 项目结构
+## Project Structure
 
 ```
 axum_gateway/
 ├── src/
-│   ├── main.rs              # 程序入口点
-│   ├── server.rs            # 服务启动和配置模块
-│   ├── routes/              # 路由定义模块
-│   │   ├── mod.rs           # 路由模块入口
-│   │   ├── grid.rs          # Grid 相关路由
-│   │   └── json_rpc.rs      # JSON-RPC 路由
-│   ├── handlers/            # 业务处理模块
-│   │   ├── mod.rs           # 业务处理模块入口
-│   │   ├── grid.rs          # Grid 业务逻辑
-│   │   ├── user_info.rs     # 用户信息处理
-│   │   └── grpc_helloworld.rs # gRPC 服务实现
-│   └── protos/              # Protobuf 生成的代码
-├── Cargo.toml               # 项目依赖配置
-└── README.md                # 项目说明文档
+│   ├── main.rs              # Program entry point
+│   ├── server.rs            # Server startup and configuration module
+│   ├── routes/              # Route definition module
+│   │   ├── mod.rs           # Route module entry
+│   │   ├── grid.rs          # Grid related routes
+│   │   └── json_rpc.rs      # JSON-RPC routes
+│   ├── handlers/            # Business logic module
+│   │   ├── mod.rs           # Business logic module entry
+│   │   ├── grid.rs          # Grid business logic
+│   │   ├── user_info.rs     # User info handling
+│   │   └── grpc_helloworld.rs # gRPC service implementation
+│   └── protos/              # Protobuf generated code
+├── Cargo.toml               # Project dependencies configuration
+└── README.md                # Project documentation
 ```
 
-## 支持的 API 协议
+## Supported API Protocols
 
 ### REST API
-- **端口**: 3000
-- **功能**: 提供基础的 RESTful 接口
-- **示例调用**:
+- **Port**: 3000
+- **Functionality**: Provides basic RESTful interfaces
+- **Example calls**:
   ```bash
-  # 获取所有网格数据
+  # Get all grid data
   curl -X GET http://localhost:3000/grid
   
-  # 获取特定网格项
+  # Get specific grid item
   curl -X GET http://localhost:3000/grid/1
   
-  # 创建新的网格项
+  # Create new grid item
   curl -X POST http://localhost:3000/grid \
     -H "Content-Type: application/json" \
     -d '{"name":"Test Grid","rows":10,"columns":10}'
   
-  # 更新网格项
+  # Update grid item
   curl -X PUT http://localhost:3000/grid/1 \
     -H "Content-Type: application/json" \
     -d '{"name":"Updated Grid","rows":20,"columns":20}'
   
-  # 删除网格项
+  # Delete grid item
   curl -X DELETE http://localhost:3000/grid/1
   ```
 
 ### JSON-RPC API
-- **端口**: 3000（集成在 REST API 中）
-- **路径**: `/jsonrpc`
-- **功能**: 提供 JSON-RPC 2.0 规范的接口
-- **示例调用**:
+- **Port**: 3000 (integrated with REST API)
+- **Path**: `/jsonrpc`
+- **Functionality**: Provides JSON-RPC 2.0 compliant interfaces
+- **Example calls**:
   ```bash
-  # 获取用户信息
+  # Get user info
   curl -X POST http://localhost:3000/jsonrpc \
     -H "Content-Type: application/json" \
     -d '{"jsonrpc":"2.0","method":"get_user_info","params":["user123"],"id":1}'
   
-  # 更新用户信息
+  # Update user info
   curl -X POST http://localhost:3000/jsonrpc \
     -H "Content-Type: application/json" \
     -d '{"jsonrpc":"2.0","method":"update_user_info","params":["user123",{"name":"John Doe"}],"id":2}'
   
-  # 验证凭据
+  # Verify credentials
   curl -X POST http://localhost:3000/jsonrpc \
     -H "Content-Type: application/json" \
     -d '{"jsonrpc":"2.0","method":"verify_credentials","params":["user123","password123"],"id":3}'
   ```
 
-#### 实现方式说明
+#### Implementation Details
 
-**当前实现**：
-- 使用 `jsonrpc-core` 库 + Axum 的 RESTful 路由处理
-- JSON-RPC 请求通过 Axum 的 POST 端点接收，然后委托给 jsonrpc-core 的 IoHandler 处理
-- 优点：与 Axum 完全集成，共享中间件（CORS、日志等），统一端口管理，部署简单
-- 缺点：每次请求需要创建 IoHandler（可优化为缓存），需要手动处理 JSON 序列化
+**Current Implementation**:
+- Uses `jsonrpc-core` library + Axum RESTful routing
+- JSON-RPC requests are received via Axum POST endpoint, then delegated to jsonrpc-core's IoHandler
+- Pros: Fully integrated with Axum, shares middleware (CORS, logging, etc.), unified port management, simple deployment
+- Cons: Requires creating IoHandler per request (can be optimized with caching), manual JSON serialization handling
 
-**其他可选实现方式**：
+**Alternative Implementation Options**:
 
 1. **jsonrpc-v2 + Axum**
-   - 更好的类型安全和异步支持
-   - API 更简洁，错误处理更完善
-   - 需要引入额外依赖
+   - Better type safety and async support
+   - Simpler API, more comprehensive error handling
+   - Requires additional dependencies
 
-2. **独立的 jsonrpc-http-server**
-   - 开箱即用的 JSON-RPC 服务器
-   - 需要独立端口和管理
-   - 无法共享 Axum 中间件
+2. **Standalone jsonrpc-http-server**
+   - Out-of-the-box JSON-RPC server
+   - Requires separate port and management
+   - Cannot share Axum middleware
 
-3. **axum-jsonrpc（如果存在）**
-   - 专门为 Axum 设计的 JSON-RPC 集成
-   - 更好的 Axum 生态兼容性
+3. **axum-jsonrpc (if available)**
+   - JSON-RPC integration designed specifically for Axum
+   - Better Axum ecosystem compatibility
 
-当前选择 jsonrpc-core + Axum 的方式最适合本项目，因为项目需要同时支持 REST、JSON-RPC 和 gRPC 三种协议，统一使用 Axum 可以简化架构和部署。
+The current choice of jsonrpc-core + Axum is most suitable for this project, as it needs to support REST, JSON-RPC, and gRPC protocols simultaneously. Using Axum uniformly simplifies architecture and deployment.
 
 ### gRPC API
-- **端口**: 5000
-- **功能**: 提供高性能的 gRPC 接口
-- **示例调用** (使用 grpcurl):
+- **Port**: 5000
+- **Functionality**: Provides high-performance gRPC interfaces
+- **Example call** (using grpcurl):
   ```bash
   grpcurl -plaintext -d '{"name":"World"}' localhost:5000 helloworld.Greeter/SayHello
   ```
 
-## 快速开始
+## Quick Start
 
-1. 确保已安装 Rust 开发环境
-2. 克隆项目代码
-3. 运行 `cargo run` 启动服务器
-4. 服务器将同时启动三个服务：
-   - REST API 和 JSON-RPC: `http://localhost:3000`
+1. Ensure Rust development environment is installed
+2. Clone the project code
+3. Run `cargo run` to start the server
+4. The server will start three services simultaneously:
+   - REST API and JSON-RPC: `http://localhost:3000`
    - gRPC: `http://localhost:5000`
 
-## 依赖
+## Configuration
 
-- [Axum](https://crates.io/crates/axum) - Web 框架
-- [Tokio](https://crates.io/crates/tokio) - 异步运行时
-- [Serde](https://crates.io/crates/serde) - 序列化/反序列化库
-- [Tonic](https://crates.io/crates/tonic) - gRPC 框架
-- [jsonrpc-core](https://crates.io/crates/jsonrpc-core) - JSON-RPC 实现
-- [tower-http](https://crates.io/crates/tower-http) - HTTP 中间件（CORS 等）
-- [tracing](https://crates.io/crates/tracing) - 日志和追踪
+The server can be configured via `config.toml` file:
+
+```toml
+[server]
+# REST API and JSON-RPC server address
+rest_host = "127.0.0.1"
+rest_port = 3000
+
+# gRPC server address
+grpc_host = "[::1]"
+grpc_port = 5000
+
+[logging]
+# Log level: trace, debug, info, warn, error
+level = "debug"
+```
+
+## Dependencies
+
+- [Axum](https://crates.io/crates/axum) - Web framework
+- [Tokio](https://crates.io/crates/tokio) - Async runtime
+- [Serde](https://crates.io/crates/serde) - Serialization/deserialization library
+- [Tonic](https://crates.io/crates/tonic) - gRPC framework
+- [jsonrpc-core](https://crates.io/crates/jsonrpc-core) - JSON-RPC implementation
+- [tower-http](https://crates.io/crates/tower-http) - HTTP middleware (CORS, etc.)
+- [tracing](https://crates.io/crates/tracing) - Logging and tracing
+- [config](https://crates.io/crates/config) - Configuration management
+
+## Testing
+
+Run tests with:
+```bash
+cargo test
+```
+
+## Building
+
+Build the project with:
+```bash
+cargo build --release
+```

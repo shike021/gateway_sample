@@ -1,6 +1,10 @@
-//! 配置管理模块
+//! Configuration management module
 //!
-//! 负责从配置文件加载和管理应用程序配置。
+//! Responsible for loading and managing application configuration from configuration files.
+//!
+//! Copyright © 2025 imshike@gmail.com
+//! SPDX-License-Identifier: Apache-2.0
+//! Author: imshike@gmail.com
 
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
@@ -20,7 +24,7 @@ pub struct LoggingConfig {
     pub level: String,
 }
 
-/// 应用程序配置
+/// Application configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub server: ServerConfig,
@@ -37,13 +41,13 @@ impl Config {
         Ok(settings.try_deserialize()?)
     }
 
-    /// 获取 REST 服务器地址
+    /// Get REST server address
     pub fn rest_addr(&self) -> Result<SocketAddr, Box<dyn std::error::Error>> {
         let addr = format!("{}:{}", self.server.rest_host, self.server.rest_port);
         addr.parse().map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
     }
 
-    /// 获取 gRPC 服务器地址
+    /// Get gRPC server address
     pub fn grpc_addr(&self) -> Result<SocketAddr, Box<dyn std::error::Error>> {
         let addr = format!("{}:{}", self.server.grpc_host, self.server.grpc_port);
         addr.parse().map_err(|e| Box::new(e) as Box<dyn std::error::Error>)

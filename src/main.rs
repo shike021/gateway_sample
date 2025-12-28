@@ -1,6 +1,10 @@
-//! Axum Grid Server 主入口点
+//! Axum Grid Server main entry point
 //!
-//! 这个文件只负责启动和配置服务，不包含具体的业务逻辑。
+//! This file is only responsible for starting and configuring the server, and does not contain specific business logic.
+//!
+//! Copyright © 2025 imshike@gmail.com
+//! SPDX-License-Identifier: Apache-2.0
+//! Author: imshike@gmail.com
 
 mod config;
 mod handlers;
@@ -17,6 +21,6 @@ use server::start_server;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // 启动服务器
+    // Start server
     start_server().await
 }

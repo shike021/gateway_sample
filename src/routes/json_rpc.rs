@@ -1,6 +1,10 @@
-//! JSON-RPC 路由处理
+//! JSON-RPC route handling
 //!
-//! 处理 JSON-RPC 相关的请求，将请求转发给业务处理模块。
+//! Handles JSON-RPC related requests and forwards requests to business logic modules.
+//!
+//! Copyright © 2024 imshike@gmail.com
+//! SPDX-License-Identifier: Apache-2.0
+//! Author: imshike@gmail.com
 
 use axum::{extract::State, response::Json, routing::post, Router, http::StatusCode};
 use jsonrpc_core::{IoHandler, Value};
@@ -10,7 +14,7 @@ use serde_json::json;
 use crate::handlers::user_info as rpc;
 use crate::server::AppState;
 
-/// JSON-RPC 2.0 请求
+/// JSON-RPC 2.0 request
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]
 struct JsonRpcRequest {
@@ -20,7 +24,7 @@ struct JsonRpcRequest {
     id: Option<Value>,
 }
 
-/// JSON-RPC 2.0 错误响应
+/// JSON-RPC 2.0 error response
 #[derive(Debug, Serialize)]
 struct JsonRpcError {
     code: i32,
@@ -28,7 +32,7 @@ struct JsonRpcError {
     data: Option<Value>,
 }
 
-/// JSON-RPC 2.0 响应
+/// JSON-RPC 2.0 response
 #[derive(Debug, Serialize)]
 struct JsonRpcResponse {
     jsonrpc: String,
@@ -37,7 +41,7 @@ struct JsonRpcResponse {
     id: Option<Value>,
 }
 
-/// JSON-RPC 错误代码
+/// JSON-RPC error codes
 #[allow(dead_code)]
 mod error_codes {
     pub const PARSE_ERROR: i32 = -32700;
@@ -47,12 +51,12 @@ mod error_codes {
     pub const INTERNAL_ERROR: i32 = -32603;
 }
 
-/// 定义 JSON-RPC 相关的路由
+/// Define JSON-RPC related routes
 pub fn rpc_routes() -> Router<AppState> {
     Router::new().route("/jsonrpc", post(handle_rpc))
 }
 
-/// 创建并配置 JSON-RPC 处理器
+/// Create and configure JSON-RPC handler
 pub fn create_rpc_handler() -> IoHandler {
     let mut io = IoHandler::new();
     
@@ -63,7 +67,7 @@ pub fn create_rpc_handler() -> IoHandler {
     io
 }
 
-/// 验证 JSON-RPC 请求格式
+/// Validate JSON-RPC request format
 fn validate_request(payload: &Value) -> Result<(), JsonRpcError> {
     if !payload.is_object() {
         return Err(JsonRpcError {
@@ -105,7 +109,7 @@ fn validate_request(payload: &Value) -> Result<(), JsonRpcError> {
     Ok(())
 }
 
-/// 处理 JSON-RPC 请求
+/// Handle JSON-RPC request
 pub async fn handle_rpc(
     State(state): State<AppState>,
     Json(payload): Json<Value>,

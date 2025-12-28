@@ -1,6 +1,10 @@
-//! 业务处理模块
+//! Business logic module
 //!
-//! 包含所有的业务逻辑处理函数。
+//! Contains all business logic processing functions.
+//!
+//! Copyright © 2025 imshike@gmail.com
+//! SPDX-License-Identifier: Apache-2.0
+//! Author: imshike@gmail.com
 
 pub mod grid;
 pub mod user_info;

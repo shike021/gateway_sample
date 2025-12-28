@@ -1,18 +1,24 @@
-//! 路由模块入口
+//! Route module entry point
+//!
+//! Integrates all route modules.
+//!
+//! Copyright © 2024 imshike@gmail.com
+//! SPDX-License-Identifier: Apache-2.0
+//! Author: imshike@gmail.com
 
 use axum::Router;
 
 pub mod grid;
 pub mod json_rpc;
 
-/// 整合所有路由
+/// Integrate all routes
 pub fn app_routes() -> Router<crate::server::AppState> {
     Router::new()
         .merge(grid_routes())
         .merge(json_rpc::rpc_routes())
 }
 
-/// 获取网格路由
+/// Get grid routes
 fn grid_routes() -> Router<crate::server::AppState> {
     grid::grid_routes()
 }

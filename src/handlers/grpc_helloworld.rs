@@ -1,3 +1,11 @@
+//! gRPC Hello World service module
+//!
+//! Implements gRPC service for Hello World functionality.
+//!
+//! Copyright © 2025 imshike@gmail.com
+//! SPDX-License-Identifier: Apache-2.0
+//! Author: imshike@gmail.com
+
 use tonic::{Request, Response, Status};
 use crate::protos::helloworld::{greeter_server::Greeter, *};
 

@@ -1,6 +1,10 @@
-//! 网格业务处理模块
+//! Grid business logic module
 //!
-//! 包含网格相关的业务逻辑处理函数。
+//! Contains business logic processing functions related to grid.
+//!
+//! Copyright © 2025 imshike@gmail.com
+//! SPDX-License-Identifier: Apache-2.0
+//! Author: imshike@gmail.com
 
 use axum::{
     extract::{Path, State},
@@ -12,7 +16,7 @@ use serde::Serialize;
 use crate::routes::grid::{GridItem, CreateGridItem, UpdateGridItem, GridItemResponse};
 use crate::server::AppState;
 
-// 响应结构体
+// Response structure
 #[derive(Serialize)]
 pub struct ApiResponse<T> {
     pub success: bool,
@@ -38,7 +42,7 @@ pub async fn list(State(state): State<AppState>) -> Json<ApiResponse<Vec<GridIte
     Json(ApiResponse {
         success: true,
         data: Some(response_items),
-        message: "获取网格项列表成功".to_string(),
+        message: "Successfully retrieved grid item list".to_string(),
     })
 }
 
@@ -61,18 +65,18 @@ pub async fn get_by_id(
                 x: item.x,
                 y: item.y,
             }),
-            message: "获取网格项成功".to_string(),
+            message: "Successfully retrieved grid item".to_string(),
         }),
         None => Json(ApiResponse {
             success: false,
             data: None,
-            message: "未找到指定的网格项".to_string(),
+            message: "Specified grid item not found".to_string(),
         }),
     }
 }
 
 #[allow(dead_code)]
-/// 创建新的网格项
+/// Create new grid item
 pub async fn create(
     State(state): State<AppState>,
     Json(payload): Json<CreateGridItem>,
@@ -110,7 +114,7 @@ pub async fn create(
 }
 
 #[allow(dead_code)]
-/// 更新网格项
+/// Update grid item
 pub async fn update(
     Path(id): Path<u64>,
     State(state): State<AppState>,
@@ -147,7 +151,7 @@ pub async fn update(
                 Json(ApiResponse {
                     success: true,
                     data: Some(response_item),
-                    message: "更新网格项成功".to_string(),
+                    message: "Successfully updated grid item".to_string(),
                 }),
             )
         }
@@ -156,14 +160,14 @@ pub async fn update(
             Json(ApiResponse {
                 success: false,
                 data: None,
-                message: "未找到指定的网格项".to_string(),
+                message: "Specified grid item not found".to_string(),
             }),
         ),
     }
 }
 
 #[allow(dead_code)]
-/// 删除网格项
+/// Delete grid item
 pub async fn delete_by_id(
     Path(id): Path<u64>,
     State(state): State<AppState>,
@@ -176,7 +180,7 @@ pub async fn delete_by_id(
         Json(ApiResponse {
             success: true,
             data: Some(()),
-            message: "删除网格项成功".to_string(),
+            message: "Successfully deleted grid item".to_string(),
         })
     } else {
         Json(ApiResponse {
