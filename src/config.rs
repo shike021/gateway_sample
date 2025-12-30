@@ -9,7 +9,7 @@
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 
-/// 服务器配置
+/// Server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
     pub rest_host: String,
@@ -18,7 +18,7 @@ pub struct ServerConfig {
     pub grpc_port: u16,
 }
 
-/// 日志配置
+/// Logging configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoggingConfig {
     pub level: String,
@@ -32,7 +32,7 @@ pub struct Config {
 }
 
 impl Config {
-    /// 从配置文件加载配置
+    /// Load configuration from configuration file
     pub fn from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let settings = config::Config::builder()
             .add_source(config::File::with_name(path))
@@ -44,13 +44,15 @@ impl Config {
     /// Get REST server address
     pub fn rest_addr(&self) -> Result<SocketAddr, Box<dyn std::error::Error>> {
         let addr = format!("{}:{}", self.server.rest_host, self.server.rest_port);
-        addr.parse().map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+        addr.parse()
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
     }
 
     /// Get gRPC server address
     pub fn grpc_addr(&self) -> Result<SocketAddr, Box<dyn std::error::Error>> {
         let addr = format!("{}:{}", self.server.grpc_host, self.server.grpc_port);
-        addr.parse().map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+        addr.parse()
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
     }
 }
 

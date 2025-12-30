@@ -6,13 +6,13 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! Author: imshike@gmail.com
 
-use std::sync::{Arc, RwLock};
-use tower_http::cors::CorsLayer;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use tonic::transport::Server;
 use crate::config::Config;
 use crate::handlers::grpc_helloworld::GreeterService;
 use crate::protos::helloworld::greeter_server::GreeterServer;
+use std::sync::{Arc, RwLock};
+use tonic::transport::Server;
+use tower_http::cors::CorsLayer;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 // Import route modules
 use crate::routes;
@@ -23,15 +23,13 @@ pub type AppState = routes::grid::AppState;
 /// Start the server
 pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
     // Load configuration
-    let config = Config::from_file("config")
-        .unwrap_or_else(|_| {
-            tracing::warn!("Failed to load config file, using defaults");
-            Config::default()
-        });
+    let config = Config::from_file("config").unwrap_or_else(|_| {
+        tracing::warn!("Failed to load config file, using defaults");
+        Config::default()
+    });
 
     // Initialize logging
-    let log_level = std::env::var("RUST_LOG")
-        .unwrap_or_else(|_| config.logging.level.clone());
+    let log_level = std::env::var("RUST_LOG").unwrap_or_else(|_| config.logging.level.clone());
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(&log_level))
         .with(tracing_subscriber::fmt::layer())
@@ -62,17 +60,17 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
     // Get gRPC server address
     let grpc_addr = config.grpc_addr()?;
     let grpc_server = Server::builder()
-        .add_service(GreeterServer::new(GreeterService::default()))
+        .add_service(GreeterServer::new(GreeterService))
         .serve(grpc_addr);
-    
+
     tracing::info!("Starting GRPC server on {}", grpc_addr);
     let grpc_server = tokio::spawn(async move {
         grpc_server.await?;
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     });
-    
+
     // Wait for both servers to complete
     let _ = tokio::try_join!(rest_server, grpc_server);
-    
+
     Ok(())
 }

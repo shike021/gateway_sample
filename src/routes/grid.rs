@@ -1,6 +1,10 @@
-//! 网格路由处理
+//! Grid route handling
 //!
-//! 处理网格相关的 HTTP 请求，将请求转发给业务处理模块。
+//! Handles HTTP requests related to grid and forwards requests to business logic modules.
+//!
+//! Copyright © 2025 imshike@gmail.com
+//! SPDX-License-Identifier: Apache-2.0
+//! Author: imshike@gmail.com
 
 #![allow(unused_imports)]
 
@@ -69,14 +73,18 @@ pub struct ApiResponse<T> {
 
 /// 定义网格相关的路由
 pub fn grid_routes() -> Router<AppState> {
-    Router::new()
-        .route("/grid", get(list).post(create))
-        .route("/grid/{id}", get(get_by_id).put(update).delete(delete_by_id))
+    Router::new().route("/grid", get(list).post(create)).route(
+        "/grid/{id}",
+        get(get_by_id).put(update).delete(delete_by_id),
+    )
 }
 
 /// 获取所有网格项
 pub async fn list(State(state): State<AppState>) -> Json<ApiResponse<Vec<GridItemResponse>>> {
-    let items = state.grid_items.read().expect("Failed to acquire read lock on grid_items");
+    let items = state
+        .grid_items
+        .read()
+        .expect("Failed to acquire read lock on grid_items");
     let response_items: Vec<GridItemResponse> = items
         .iter()
         .map(|item| GridItemResponse {
@@ -100,7 +108,10 @@ pub async fn get_by_id(
     Path(id): Path<u64>,
     State(state): State<AppState>,
 ) -> Json<ApiResponse<GridItemResponse>> {
-    let items = state.grid_items.read().expect("Failed to acquire read lock on grid_items");
+    let items = state
+        .grid_items
+        .read()
+        .expect("Failed to acquire read lock on grid_items");
     let item = items.iter().find(|item| item.id == id);
 
     match item {
@@ -113,7 +124,7 @@ pub async fn get_by_id(
                 x: item.x,
                 y: item.y,
             }),
-            message: "Successfully retrieved grid item".to_string(),
+            message: "获取网格项成功".to_string(),
         }),
         None => Json(ApiResponse {
             success: false,
@@ -128,7 +139,10 @@ pub async fn create(
     State(state): State<AppState>,
     Json(payload): Json<CreateGridItem>,
 ) -> (StatusCode, Json<ApiResponse<GridItemResponse>>) {
-    let mut items = state.grid_items.write().expect("Failed to acquire write lock on grid_items");
+    let mut items = state
+        .grid_items
+        .write()
+        .expect("Failed to acquire write lock on grid_items");
 
     let new_id = items.iter().map(|item| item.id).max().unwrap_or(0) + 1;
 
@@ -166,7 +180,10 @@ pub async fn update(
     State(state): State<AppState>,
     Json(payload): Json<UpdateGridItem>,
 ) -> (StatusCode, Json<ApiResponse<GridItemResponse>>) {
-    let mut items = state.grid_items.write().expect("Failed to acquire write lock on grid_items");
+    let mut items = state
+        .grid_items
+        .write()
+        .expect("Failed to acquire write lock on grid_items");
     let item = items.iter_mut().find(|item| item.id == id);
 
     match item {
@@ -217,7 +234,10 @@ pub async fn delete_by_id(
     Path(id): Path<u64>,
     State(state): State<AppState>,
 ) -> Json<ApiResponse<()>> {
-    let mut items = state.grid_items.write().expect("Failed to acquire write lock on grid_items");
+    let mut items = state
+        .grid_items
+        .write()
+        .expect("Failed to acquire write lock on grid_items");
     let initial_len = items.len();
     items.retain(|item| item.id != id);
 

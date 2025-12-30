@@ -7,5 +7,5 @@
 //! Author: imshike@gmail.com
 
 pub mod grid;
-pub mod user_info;
 pub mod grpc_helloworld;
+pub mod user_info;

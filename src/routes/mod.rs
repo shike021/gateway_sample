@@ -2,7 +2,7 @@
 //!
 //! Integrates all route modules.
 //!
-//! Copyright © 2024 imshike@gmail.com
+//! Copyright © 2025 imshike@gmail.com
 //! SPDX-License-Identifier: Apache-2.0
 //! Author: imshike@gmail.com
 

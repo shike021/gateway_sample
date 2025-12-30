@@ -6,8 +6,8 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! Author: imshike@gmail.com
 
-use tonic::{Request, Response, Status};
 use crate::protos::helloworld::{greeter_server::Greeter, *};
+use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]
 pub struct GreeterService;
@@ -24,13 +24,8 @@ impl Greeter for GreeterService {
         }))
     }
 
-    async fn echo(
-        &self,
-        request: Request<EchoRequest>,
-    ) -> Result<Response<EchoReply>, Status> {
+    async fn echo(&self, request: Request<EchoRequest>) -> Result<Response<EchoReply>, Status> {
         let message = request.into_inner().message;
-        Ok(Response::new(EchoReply {
-            message,
-        }))
+        Ok(Response::new(EchoReply { message }))
     }
 }

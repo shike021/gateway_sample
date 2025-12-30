@@ -2,11 +2,11 @@
 //!
 //! Handles JSON-RPC related requests and forwards requests to business logic modules.
 //!
-//! Copyright © 2024 imshike@gmail.com
+//! Copyright © 2025 imshike@gmail.com
 //! SPDX-License-Identifier: Apache-2.0
 //! Author: imshike@gmail.com
 
-use axum::{extract::State, response::Json, routing::post, Router, http::StatusCode};
+use axum::{extract::State, http::StatusCode, response::Json, routing::post, Router};
 use jsonrpc_core::{IoHandler, Value};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -59,11 +59,11 @@ pub fn rpc_routes() -> Router<AppState> {
 /// Create and configure JSON-RPC handler
 pub fn create_rpc_handler() -> IoHandler {
     let mut io = IoHandler::new();
-    
+
     io.add_method("get_user_info", rpc::get_user_info);
     io.add_method("update_user_info", rpc::update_user_info);
     io.add_method("verify_credentials", rpc::verify_credentials);
-    
+
     io
 }
 
@@ -129,26 +129,24 @@ pub async fn handle_rpc(
     }
 
     let response = state.rpc_handler.handle_request(&payload.to_string()).await;
-    
+
     match response {
-        Some(resp) => {
-            match serde_json::from_str::<Value>(&resp) {
-                Ok(json_value) => (StatusCode::OK, Json(json_value)),
-                Err(_) => (
-                    StatusCode::OK,
-                    Json(json!(JsonRpcResponse {
-                        jsonrpc: "2.0".to_string(),
-                        result: None,
-                        error: Some(JsonRpcError {
-                            code: error_codes::INTERNAL_ERROR,
-                            message: "Internal Error: failed to parse response".to_string(),
-                            data: None,
-                        }),
-                        id: request_id,
-                    })),
-                ),
-            }
-        }
+        Some(resp) => match serde_json::from_str::<Value>(&resp) {
+            Ok(json_value) => (StatusCode::OK, Json(json_value)),
+            Err(_) => (
+                StatusCode::OK,
+                Json(json!(JsonRpcResponse {
+                    jsonrpc: "2.0".to_string(),
+                    result: None,
+                    error: Some(JsonRpcError {
+                        code: error_codes::INTERNAL_ERROR,
+                        message: "Internal Error: failed to parse response".to_string(),
+                        data: None,
+                    }),
+                    id: request_id,
+                })),
+            ),
+        },
         None => (
             StatusCode::OK,
             Json(json!(JsonRpcResponse {

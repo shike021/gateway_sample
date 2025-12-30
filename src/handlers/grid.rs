@@ -13,7 +13,7 @@ use axum::{
 };
 use serde::Serialize;
 
-use crate::routes::grid::{GridItem, CreateGridItem, UpdateGridItem, GridItemResponse};
+use crate::routes::grid::{CreateGridItem, GridItem, GridItemResponse, UpdateGridItem};
 use crate::server::AppState;
 
 // Response structure
@@ -27,7 +27,10 @@ pub struct ApiResponse<T> {
 #[allow(dead_code)]
 /// 获取所有网格项
 pub async fn list(State(state): State<AppState>) -> Json<ApiResponse<Vec<GridItemResponse>>> {
-    let items = state.grid_items.read().expect("Failed to acquire read lock on grid_items");
+    let items = state
+        .grid_items
+        .read()
+        .expect("Failed to acquire read lock on grid_items");
     let response_items: Vec<GridItemResponse> = items
         .iter()
         .map(|item| GridItemResponse {
@@ -52,7 +55,10 @@ pub async fn get_by_id(
     Path(id): Path<u64>,
     State(state): State<AppState>,
 ) -> Json<ApiResponse<GridItemResponse>> {
-    let items = state.grid_items.read().expect("Failed to acquire read lock on grid_items");
+    let items = state
+        .grid_items
+        .read()
+        .expect("Failed to acquire read lock on grid_items");
     let item = items.iter().find(|item| item.id == id);
 
     match item {
@@ -81,7 +87,10 @@ pub async fn create(
     State(state): State<AppState>,
     Json(payload): Json<CreateGridItem>,
 ) -> (StatusCode, Json<ApiResponse<GridItemResponse>>) {
-    let mut items = state.grid_items.write().expect("Failed to acquire write lock on grid_items");
+    let mut items = state
+        .grid_items
+        .write()
+        .expect("Failed to acquire write lock on grid_items");
 
     let new_id = items.iter().map(|item| item.id).max().unwrap_or(0) + 1;
 
@@ -108,7 +117,7 @@ pub async fn create(
         Json(ApiResponse {
             success: true,
             data: Some(response_item),
-            message: "创建网格项成功".to_string(),
+            message: "Grid item created successfully".to_string(),
         }),
     )
 }
@@ -120,7 +129,10 @@ pub async fn update(
     State(state): State<AppState>,
     Json(payload): Json<UpdateGridItem>,
 ) -> (StatusCode, Json<ApiResponse<GridItemResponse>>) {
-    let mut items = state.grid_items.write().expect("Failed to acquire write lock on grid_items");
+    let mut items = state
+        .grid_items
+        .write()
+        .expect("Failed to acquire write lock on grid_items");
     let item = items.iter_mut().find(|item| item.id == id);
 
     match item {
@@ -172,7 +184,10 @@ pub async fn delete_by_id(
     Path(id): Path<u64>,
     State(state): State<AppState>,
 ) -> Json<ApiResponse<()>> {
-    let mut items = state.grid_items.write().expect("Failed to acquire write lock on grid_items");
+    let mut items = state
+        .grid_items
+        .write()
+        .expect("Failed to acquire write lock on grid_items");
     let initial_len = items.len();
     items.retain(|item| item.id != id);
 
@@ -186,7 +201,7 @@ pub async fn delete_by_id(
         Json(ApiResponse {
             success: false,
             data: None,
-            message: "未找到指定的网格项".to_string(),
+            message: "Grid item not found".to_string(),
         })
     }
 }
