@@ -1,6 +1,6 @@
 //! Business logic module
 //!
-//! Contains all business logic processing functions.
+//! Contains business logic processing functions for the application.
 //!
 //! Copyright © 2025 imshike@gmail.com
 //! SPDX-License-Identifier: Apache-2.0

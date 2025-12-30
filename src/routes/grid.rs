@@ -17,9 +17,10 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock};
+use utoipa::ToSchema;
 
 // 网格项数据结构（内部存储）
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, ToSchema)]
 pub struct GridItem {
     pub id: u64,
     pub name: String,
@@ -29,7 +30,7 @@ pub struct GridItem {
 }
 
 // 网格项数据结构（API 响应）
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct GridItemResponse {
     pub id: u64,
     pub name: String,
@@ -39,7 +40,7 @@ pub struct GridItemResponse {
 }
 
 // 创建网格项的请求体
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct CreateGridItem {
     pub name: String,
     pub description: String,
@@ -48,7 +49,7 @@ pub struct CreateGridItem {
 }
 
 // Request body for updating grid item
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct UpdateGridItem {
     pub name: Option<String>,
     pub description: Option<String>,

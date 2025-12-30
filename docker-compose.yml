@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  axum-gateway:
+    build: .
+    ports:
+      - "3000:3000"
+      - "50051:50051"
+    environment:
+      - RUST_LOG=info
+      - REST_HOST=0.0.0.0
+      - REST_PORT=3000
+      - GRPC_HOST=0.0.0.0
+      - GRPC_PORT=50051
+    volumes:
+      - ./config.json:/app/config.json:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

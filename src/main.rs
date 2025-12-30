@@ -7,6 +7,7 @@
 //! Author: imshike@gmail.com
 
 mod config;
+mod errors;
 mod handlers;
 mod routes;
 mod server;
