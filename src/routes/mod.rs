@@ -8,7 +8,7 @@
 
 use axum::Router;
 
-pub mod grid;
+pub mod rest;
 pub mod health;
 pub mod json_rpc;
 
@@ -16,7 +16,7 @@ pub mod json_rpc;
 pub fn app_routes() -> Router<crate::server::AppState> {
     Router::new()
         .merge(health_routes())
-        .merge(grid_routes())
+        .merge(rest_routes())
         .merge(json_rpc::rpc_routes())
 }
 
@@ -28,7 +28,7 @@ fn health_routes() -> Router<crate::server::AppState> {
     )
 }
 
-/// Get grid routes
-fn grid_routes() -> Router<crate::server::AppState> {
-    grid::grid_routes()
+/// Get rest routes
+fn rest_routes() -> Router<crate::server::AppState> {
+    rest::rest_routes()
 }

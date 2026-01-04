@@ -1,6 +1,6 @@
-//! Grid route handling
+//! REST route handling
 //!
-//! Handles HTTP requests related to grid and forwards requests to business logic modules.
+//! Handles HTTP requests related to REST APIs and forwards requests to business logic modules.
 //!
 //! Copyright © 2025 imshike@gmail.com
 //! SPDX-License-Identifier: Apache-2.0
@@ -72,8 +72,8 @@ pub struct ApiResponse<T> {
     pub message: String,
 }
 
-/// 定义网格相关的路由
-pub fn grid_routes() -> Router<AppState> {
+/// 定义REST相关的路由
+pub fn rest_routes() -> Router<AppState> {
     Router::new().route("/grid", get(list).post(create)).route(
         "/grid/{id}",
         get(get_by_id).put(update).delete(delete_by_id),

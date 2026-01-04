@@ -13,7 +13,7 @@ use axum::{
 };
 use serde::Serialize;
 
-use crate::routes::grid::{CreateGridItem, GridItem, GridItemResponse, UpdateGridItem};
+use crate::routes::rest::{CreateGridItem, GridItem, GridItemResponse, UpdateGridItem};
 use crate::server::AppState;
 
 // Response structure

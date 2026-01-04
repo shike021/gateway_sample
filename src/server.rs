@@ -18,7 +18,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use crate::routes;
 
 /// Application state
-pub type AppState = routes::grid::AppState;
+pub type AppState = routes::rest::AppState;
 
 /// Start the server
 pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
