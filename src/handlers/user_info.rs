@@ -6,11 +6,11 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! Author: imshike@gmail.com
 
-use jsonrpc_core::{Params, Result, Value};
+use jsonrpsee::types::ErrorObjectOwned;
 use serde_json::json;
 
 /// Get user information
-pub async fn get_user_info(_params: Params) -> Result<Value> {
+pub async fn get_user_info() -> Result<serde_json::Value, ErrorObjectOwned> {
     Ok(json!({
         "name": "John Doe",
         "age": 30,
@@ -20,10 +20,9 @@ pub async fn get_user_info(_params: Params) -> Result<Value> {
 }
 
 /// Update user information
-pub async fn update_user_info(params: Params) -> Result<Value> {
-    let params: Value = params.parse()?;
-    let name = params.get("name").and_then(|v| v.as_str()).unwrap_or("");
-    let age = params.get("age").and_then(|v| v.as_u64()).unwrap_or(0);
+pub async fn update_user_info(params: serde_json::Value) -> Result<serde_json::Value, ErrorObjectOwned> {
+    let name = params.get("name").and_then(|v: &serde_json::Value| v.as_str()).unwrap_or("");
+    let age = params.get("age").and_then(|v: &serde_json::Value| v.as_u64()).unwrap_or(0);
 
     Ok(json!({
         "success": true,
@@ -32,15 +31,14 @@ pub async fn update_user_info(params: Params) -> Result<Value> {
 }
 
 /// Verify user credentials
-pub async fn verify_credentials(params: Params) -> Result<Value> {
-    let params: Value = params.parse()?;
+pub async fn verify_credentials(params: serde_json::Value) -> Result<serde_json::Value, ErrorObjectOwned> {
     let username = params
         .get("username")
-        .and_then(|v| v.as_str())
+        .and_then(|v: &serde_json::Value| v.as_str())
         .unwrap_or("");
     let password = params
         .get("password")
-        .and_then(|v| v.as_str())
+        .and_then(|v: &serde_json::Value| v.as_str())
         .unwrap_or("");
 
     Ok(json!({

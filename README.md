@@ -9,6 +9,10 @@ A multi-protocol gateway server built with Rust and the Axum framework, providin
 - Modular architecture with separated routing and business logic
 - CORS support
 - Easy to extend and maintain
+- Modern async JSON-RPC implementation with jsonrpsee
+- Multiple gRPC services (GreeterService and UserService)
+- Health check endpoint for monitoring
+- OpenAPI/Swagger documentation support
 
 ## Project Structure
 
@@ -17,15 +21,19 @@ axum_gateway/
 ├── src/
 │   ├── main.rs              # Program entry point
 │   ├── server.rs            # Server startup and configuration module
+│   ├── config.rs            # Configuration management
 │   ├── routes/              # Route definition module
 │   │   ├── mod.rs           # Route module entry
-│   │   ├── grid.rs          # Grid related routes
-│   │   └── json_rpc.rs      # JSON-RPC routes
+│   │   ├── rest.rs          # REST API routes (renamed from grid.rs)
+│   │   ├── json_rpc.rs      # JSON-RPC routes
+│   │   └── health.rs        # Health check routes
 │   ├── handlers/            # Business logic module
 │   │   ├── mod.rs           # Business logic module entry
 │   │   ├── grid.rs          # Grid business logic
-│   │   ├── user_info.rs     # User info handling
-│   │   └── grpc_helloworld.rs # gRPC service implementation
+│   │   ├── user_info.rs     # User info handling (JSON-RPC)
+│   │   ├── grpc_helloworld.rs # gRPC Greeter service implementation
+│   │   └── grpc_user.rs     # gRPC UserService implementation
+│   ├── errors.rs            # Error handling
 │   └── protos/              # Protobuf generated code
 ├── Cargo.toml               # Project dependencies configuration
 └── README.md                # Project documentation
@@ -59,59 +67,66 @@ axum_gateway/
   ```
 
 ### JSON-RPC API
-- **Port**: 3000 (integrated with REST API)
-- **Path**: `/jsonrpc`
-- **Functionality**: Provides JSON-RPC 2.0 compliant interfaces
+- **Port**: 4000
+- **Functionality**: Provides JSON-RPC 2.0 compliant interfaces using jsonrpsee
 - **Example calls**:
   ```bash
   # Get user info
-  curl -X POST http://localhost:3000/jsonrpc \
+  curl -X POST http://localhost:4000 \
     -H "Content-Type: application/json" \
-    -d '{"jsonrpc":"2.0","method":"get_user_info","params":["user123"],"id":1}'
+    -d '{"jsonrpc":"2.0","method":"get_user_info","params":{},"id":1}'
   
   # Update user info
-  curl -X POST http://localhost:3000/jsonrpc \
+  curl -X POST http://localhost:4000 \
     -H "Content-Type: application/json" \
-    -d '{"jsonrpc":"2.0","method":"update_user_info","params":["user123",{"name":"John Doe"}],"id":2}'
+    -d '{"jsonrpc":"2.0","method":"update_user_info","params":{"name":"John Doe","email":"john@example.com","age":30,"status":"active"},"id":2}'
   
   # Verify credentials
-  curl -X POST http://localhost:3000/jsonrpc \
+  curl -X POST http://localhost:4000 \
     -H "Content-Type: application/json" \
-    -d '{"jsonrpc":"2.0","method":"verify_credentials","params":["user123","password123"],"id":3}'
+    -d '{"jsonrpc":"2.0","method":"verify_credentials","params":{"username":"testuser","password":"testpass"},"id":3}'
   ```
 
 #### Implementation Details
 
 **Current Implementation**:
-- Uses `jsonrpc-core` library + Axum RESTful routing
-- JSON-RPC requests are received via Axum POST endpoint, then delegated to jsonrpc-core's IoHandler
-- Pros: Fully integrated with Axum, shares middleware (CORS, logging, etc.), unified port management, simple deployment
-- Cons: Requires creating IoHandler per request (can be optimized with caching), manual JSON serialization handling
+- Uses `jsonrpsee` library for modern async JSON-RPC support
+- Runs on a dedicated port (4000) separate from REST API
+- Provides better type safety and async support compared to jsonrpc-core
+- Uses RpcModule for registering RPC methods with proper error handling
 
-**Alternative Implementation Options**:
-
-1. **jsonrpc-v2 + Axum**
-   - Better type safety and async support
-   - Simpler API, more comprehensive error handling
-   - Requires additional dependencies
-
-2. **Standalone jsonrpc-http-server**
-   - Out-of-the-box JSON-RPC server
-   - Requires separate port and management
-   - Cannot share Axum middleware
-
-3. **axum-jsonrpc (if available)**
-   - JSON-RPC integration designed specifically for Axum
-   - Better Axum ecosystem compatibility
-
-The current choice of jsonrpc-core + Axum is most suitable for this project, as it needs to support REST, JSON-RPC, and gRPC protocols simultaneously. Using Axum uniformly simplifies architecture and deployment.
+**Key Features**:
+- Full JSON-RPC 2.0 specification compliance
+- Async method support with tokio
+- Better error handling with ErrorObjectOwned
+- Subscription support (available but not currently used)
+- High-performance async implementation
 
 ### gRPC API
 - **Port**: 5000
-- **Functionality**: Provides high-performance gRPC interfaces
+- **Functionality**: Provides high-performance gRPC interfaces with two services
+- **Services**:
+  - **GreeterService**: Basic greeting service with `say_hello` and `echo` methods
+  - **UserService**: User management service with CRUD operations
 - **Example call** (using grpcurl):
   ```bash
+  # GreeterService - SayHello
   grpcurl -plaintext -d '{"name":"World"}' localhost:5000 helloworld.Greeter/SayHello
+  
+  # GreeterService - Echo
+  grpcurl -plaintext -d '{"message":"Hello"}' localhost:5000 helloworld.Greeter/Echo
+  
+  # UserService - CreateUser
+  grpcurl -plaintext -d '{"name":"Alice","email":"alice@example.com","age":25}' localhost:5000 user.UserService/CreateUser
+  
+  # UserService - GetUser
+  grpcurl -plaintext -d '{"user_id":1}' localhost:5000 user.UserService/GetUser
+  
+  # UserService - UpdateUser
+  grpcurl -plaintext -d '{"user_id":1,"name":"Alice Updated","email":"alice.updated@example.com","age":26}' localhost:5000 user.UserService/UpdateUser
+  
+  # UserService - DeleteUser
+  grpcurl -plaintext -d '{"user_id":1}' localhost:5000 user.UserService/DeleteUser
   ```
 
 ## Quick Start
@@ -120,18 +135,23 @@ The current choice of jsonrpc-core + Axum is most suitable for this project, as 
 2. Clone the project code
 3. Run `cargo run` to start the server
 4. The server will start three services simultaneously:
-   - REST API and JSON-RPC: `http://localhost:3000`
+   - REST API: `http://localhost:3000`
+   - JSON-RPC: `http://localhost:4000`
    - gRPC: `http://localhost:5000`
 
 ## Configuration
 
-The server can be configured via `config.toml` file:
+The server can be configured via `config` file (TOML format):
 
 ```toml
 [server]
-# REST API and JSON-RPC server address
+# REST API server address
 rest_host = "127.0.0.1"
 rest_port = 3000
+
+# JSON-RPC server address
+jsonrpc_host = "127.0.0.1"
+jsonrpc_port = 4000
 
 # gRPC server address
 grpc_host = "[::1]"
@@ -148,10 +168,12 @@ level = "debug"
 - [Tokio](https://crates.io/crates/tokio) - Async runtime
 - [Serde](https://crates.io/crates/serde) - Serialization/deserialization library
 - [Tonic](https://crates.io/crates/tonic) - gRPC framework
-- [jsonrpc-core](https://crates.io/crates/jsonrpc-core) - JSON-RPC implementation
+- [jsonrpsee](https://crates.io/crates/jsonrpsee) - Modern async JSON-RPC implementation
 - [tower-http](https://crates.io/crates/tower-http) - HTTP middleware (CORS, etc.)
 - [tracing](https://crates.io/crates/tracing) - Logging and tracing
 - [config](https://crates.io/crates/config) - Configuration management
+- [utoipa](https://crates.io/crates/utoipa) - OpenAPI documentation generation
+- [utoipa-swagger-ui](https://crates.io/crates/utoipa-swagger-ui) - Swagger UI integration
 
 ## Testing
 

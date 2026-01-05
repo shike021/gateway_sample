@@ -61,7 +61,6 @@ pub struct UpdateGridItem {
 #[derive(Clone)]
 pub struct AppState {
     pub grid_items: Arc<RwLock<Vec<GridItem>>>,
-    pub rpc_handler: Arc<jsonrpc_core::IoHandler>,
 }
 
 // Response structure

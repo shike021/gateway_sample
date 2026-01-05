@@ -8,4 +8,5 @@
 
 pub mod grid;
 pub mod grpc_helloworld;
+pub mod grpc_user;
 pub mod user_info;

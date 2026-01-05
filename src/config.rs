@@ -16,6 +16,8 @@ pub struct ServerConfig {
     pub rest_port: u16,
     pub grpc_host: String,
     pub grpc_port: u16,
+    pub jsonrpc_host: String,
+    pub jsonrpc_port: u16,
 }
 
 /// Logging configuration
@@ -54,6 +56,13 @@ impl Config {
         addr.parse()
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
     }
+
+    /// Get JSON-RPC server address
+    pub fn jsonrpc_addr(&self) -> Result<SocketAddr, Box<dyn std::error::Error>> {
+        let addr = format!("{}:{}", self.server.jsonrpc_host, self.server.jsonrpc_port);
+        addr.parse()
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+    }
 }
 
 impl Default for Config {
@@ -64,6 +73,8 @@ impl Default for Config {
                 rest_port: 3000,
                 grpc_host: "[::1]".to_string(),
                 grpc_port: 5000,
+                jsonrpc_host: "127.0.0.1".to_string(),
+                jsonrpc_port: 4000,
             },
             logging: LoggingConfig {
                 level: "debug".to_string(),

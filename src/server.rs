@@ -8,7 +8,10 @@
 
 use crate::config::Config;
 use crate::handlers::grpc_helloworld::GreeterService;
+use crate::handlers::grpc_user::UserServiceImpl;
 use crate::protos::helloworld::greeter_server::GreeterServer;
+use crate::protos::user::user_service_server::UserServiceServer;
+use jsonrpsee::server::{ServerBuilder, ServerHandle};
 use std::sync::{Arc, RwLock};
 use tonic::transport::Server;
 use tower_http::cors::CorsLayer;
@@ -19,6 +22,7 @@ use crate::routes;
 
 /// Application state
 pub type AppState = routes::rest::AppState;
+
 
 /// Start the server
 pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
@@ -38,7 +42,6 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize application state
     let state = AppState {
         grid_items: Arc::new(RwLock::new(Vec::new())),
-        rpc_handler: Arc::new(routes::json_rpc::create_rpc_handler()),
     };
 
     // Build application routes
@@ -49,6 +52,19 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
     // Get REST server address
     let rest_addr = config.rest_addr()?;
     tracing::info!("Starting REST API server on {}", rest_addr);
+
+    // Get JSON-RPC server address
+    let jsonrpc_addr = config.jsonrpc_addr()?;
+    tracing::info!("Starting JSON-RPC server on {}", jsonrpc_addr);
+
+    // Start JSON-RPC server
+    let jsonrpc_server = tokio::spawn(async move {
+        let server = ServerBuilder::default().build(jsonrpc_addr).await?;
+        let rpc_module = routes::json_rpc::create_rpc_module();
+        let handle: ServerHandle = server.start(rpc_module);
+        handle.stopped().await;
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    });
 
     // Start REST API server
     let rest_server = tokio::spawn(async move {
@@ -61,6 +77,7 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
     let grpc_addr = config.grpc_addr()?;
     let grpc_server = Server::builder()
         .add_service(GreeterServer::new(GreeterService))
+        .add_service(UserServiceServer::new(UserServiceImpl::default()))
         .serve(grpc_addr);
 
     tracing::info!("Starting GRPC server on {}", grpc_addr);
@@ -69,8 +86,8 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     });
 
-    // Wait for both servers to complete
-    let _ = tokio::try_join!(rest_server, grpc_server);
+    // Wait for all servers to complete
+    let _ = tokio::try_join!(jsonrpc_server, rest_server, grpc_server);
 
     Ok(())
 }

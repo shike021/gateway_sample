@@ -17,7 +17,6 @@ pub fn app_routes() -> Router<crate::server::AppState> {
     Router::new()
         .merge(health_routes())
         .merge(rest_routes())
-        .merge(json_rpc::rpc_routes())
 }
 
 /// Get health routes

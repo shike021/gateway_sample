@@ -16,6 +16,9 @@ mod protos {
     pub mod helloworld {
         include!(concat!(env!("OUT_DIR"), "/helloworld.rs"));
     }
+    pub mod user {
+        include!(concat!(env!("OUT_DIR"), "/user.rs"));
+    }
 }
 
 use server::start_server;
