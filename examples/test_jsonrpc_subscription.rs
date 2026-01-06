@@ -1,0 +1,36 @@
+use jsonrpsee::core::client::{ClientBuilder, SubscriptionClient};
+use jsonrpsee::ws_client::WsClientBuilder;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let url = "ws://127.0.0.1:4000";
+    let client = WsClientBuilder::default().build(url).await?;
+
+    println!("Testing JSON-RPC subscription...");
+
+    let params = json!({
+        "user_id": 1,
+        "interval_seconds": 2
+    });
+
+    let mut sub = client.subscribe(
+        "subscribe_user_updates",
+        params,
+        "unsubscribe_user_updates",
+    ).await?;
+
+    println!("Receiving updates:");
+    let mut count = 0;
+    while let Some(update) = sub.next().await {
+        count += 1;
+        println!("[{}] Update: {}", count, update);
+        if count >= 5 {
+            println!("Received 5 updates, stopping...");
+            break;
+        }
+    }
+
+    println!("Test completed!");
+    Ok(())
+}

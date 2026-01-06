@@ -8,7 +8,10 @@
 
 use jsonrpsee::server::RpcModule;
 use jsonrpsee::types::ErrorObjectOwned;
+use jsonrpsee::server::SubscriptionMessage;
+use jsonrpsee::core::error::StringError;
 use serde_json::Value;
+use std::time::Duration;
 
 use crate::handlers::user_info as rpc;
 
@@ -34,6 +37,55 @@ pub fn create_rpc_module() -> RpcModule<()> {
             let value: Value = params.parse().unwrap_or_default();
             rpc::verify_credentials(value).await.map_err(|e: ErrorObjectOwned| e)
         })
+        .unwrap();
+
+    module
+        .register_subscription(
+            "subscribe_user_updates",
+            "subscribe_user_updates",
+            "unsubscribe_user_updates",
+            |params, pending, _ctx, _extensions| async move {
+                let value: Value = params.parse().unwrap_or_default();
+                let user_id = value.get("user_id").and_then(|v| v.as_i64()).unwrap_or(1);
+                let interval_secs = value.get("interval_seconds").and_then(|v| v.as_u64()).unwrap_or(2);
+                let interval = Duration::from_secs(interval_secs);
+
+                let sink = pending.accept().await.unwrap();
+
+                let mut counter = 0;
+                loop {
+                    tokio::time::sleep(interval).await;
+
+                    counter += 1;
+                    let timestamp = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs();
+
+                    let update_type = match counter % 3 {
+                        0 => "profile_update",
+                        1 => "activity_update",
+                        _ => "status_update",
+                    };
+
+                    let update = serde_json::json!({
+                        "user_id": user_id,
+                        "name": format!("User {}", user_id),
+                        "email": format!("user{}@example.com", user_id),
+                        "age": 30 + (counter % 10) as i32,
+                        "update_type": update_type,
+                        "timestamp": timestamp,
+                        "counter": counter
+                    });
+
+                    let msg = SubscriptionMessage::from_json(&update).unwrap();
+                    if sink.send(msg).await.is_err() {
+                        break;
+                    }
+                }
+                Ok::<(), StringError>(())
+            },
+        )
         .unwrap();
 
     module

@@ -9,6 +9,9 @@
 use crate::protos::user::{user_service_server::UserService, *};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
+use std::time::Duration;
+use tokio_stream::wrappers::ReceiverStream;
+use tokio::sync::mpsc;
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Default)]
@@ -18,6 +21,8 @@ pub struct UserServiceImpl {
 
 #[tonic::async_trait]
 impl UserService for UserServiceImpl {
+    type SubscribeUserUpdatesStream = ReceiverStream<Result<UserUpdate, Status>>;
+
     async fn get_user(&self, request: Request<GetUserRequest>) -> Result<Response<GetUserResponse>, Status> {
         let user_id = request.into_inner().user_id;
 
@@ -77,5 +82,56 @@ impl UserService for UserServiceImpl {
             success: true,
             message: format!("User {} deleted successfully", user_id),
         }))
+    }
+
+    async fn subscribe_user_updates(
+        &self,
+        request: Request<SubscribeRequest>,
+    ) -> Result<Response<Self::SubscribeUserUpdatesStream>, Status> {
+        let req = request.into_inner();
+        let user_id = req.user_id;
+        let interval = if req.interval_seconds > 0 {
+            Duration::from_secs(req.interval_seconds as u64)
+        } else {
+            Duration::from_secs(2)
+        };
+
+        let (tx, rx) = mpsc::channel(32);
+
+        tokio::spawn(async move {
+            let mut counter = 0;
+            loop {
+                tokio::time::sleep(interval).await;
+
+                counter += 1;
+                let timestamp = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
+
+                let update_type = match counter % 3 {
+                    0 => "profile_update",
+                    1 => "activity_update",
+                    _ => "status_update",
+                };
+
+                let user_update = UserUpdate {
+                    user: Some(User {
+                        id: user_id,
+                        name: format!("User {}", user_id),
+                        email: format!("user{}@example.com", user_id),
+                        age: 30 + (counter % 10) as i32,
+                    }),
+                    update_type: update_type.to_string(),
+                    timestamp: timestamp as i64,
+                };
+
+                if tx.send(Ok(user_update)).await.is_err() {
+                    break;
+                }
+            }
+        });
+
+        Ok(Response::new(ReceiverStream::new(rx)))
     }
 }

@@ -13,6 +13,9 @@ A multi-protocol gateway server built with Rust and the Axum framework, providin
 - Multiple gRPC services (GreeterService and UserService)
 - Health check endpoint for monitoring
 - OpenAPI/Swagger documentation support
+- **Subscription support**:
+  - JSON-RPC WebSocket subscriptions for real-time updates
+  - gRPC streaming subscriptions for continuous data streams
 
 ## Project Structure
 
@@ -85,7 +88,48 @@ axum_gateway/
   curl -X POST http://localhost:4000 \
     -H "Content-Type: application/json" \
     -d '{"jsonrpc":"2.0","method":"verify_credentials","params":{"username":"testuser","password":"testpass"},"id":3}'
+  
+  # Subscribe to user updates (WebSocket)
+  # Use a WebSocket client to connect to ws://localhost:4000
+  # Send: {"jsonrpc":"2.0","method":"subscribe_user_updates","params":{"user_id":1,"interval_seconds":2},"id":1}
+  # You will receive periodic updates in the format:
+  # {"jsonrpc":"2.0","method":"subscribe_user_updates","params":{"subscription":<id>,"result":{...}}}
   ```
+
+#### JSON-RPC WebSocket Subscriptions
+
+The JSON-RPC server supports WebSocket connections for real-time subscriptions:
+
+**Subscription Method**: `subscribe_user_updates`
+**Parameters**:
+- `user_id` (integer): The user ID to subscribe to updates for
+- `interval_seconds` (integer): Update interval in seconds (default: 2)
+
+**Example using WebSocket**:
+```bash
+# Run the example WebSocket client
+cargo run --example test_jsonrpc_ws
+```
+
+**Response Format**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "subscribe_user_updates",
+  "params": {
+    "subscription": 8860627584088728,
+    "result": {
+      "user_id": 1,
+      "name": "User 1",
+      "email": "user1@example.com",
+      "age": 31,
+      "update_type": "activity_update",
+      "timestamp": 1767714685,
+      "counter": 1
+    }
+  }
+}
+```
 
 #### Implementation Details
 
@@ -107,7 +151,7 @@ axum_gateway/
 - **Functionality**: Provides high-performance gRPC interfaces with two services
 - **Services**:
   - **GreeterService**: Basic greeting service with `say_hello` and `echo` methods
-  - **UserService**: User management service with CRUD operations
+  - **UserService**: User management service with CRUD operations and streaming subscriptions
 - **Example call** (using grpcurl):
   ```bash
   # GreeterService - SayHello
@@ -127,7 +171,59 @@ axum_gateway/
   
   # UserService - DeleteUser
   grpcurl -plaintext -d '{"user_id":1}' localhost:5000 user.UserService/DeleteUser
+  
+  # UserService - SubscribeUserUpdates (streaming subscription)
+  grpcurl -plaintext -d '{"user_id":1,"interval_seconds":2}' localhost:5000 user.UserService/SubscribeUserUpdates
   ```
+
+#### gRPC Streaming Subscriptions
+
+The UserService supports streaming RPC for real-time updates:
+
+**Streaming Method**: `SubscribeUserUpdates`
+**Request Parameters**:
+- `user_id` (int32): The user ID to subscribe to updates for
+- `interval_seconds` (int32): Update interval in seconds (default: 2)
+
+**Example using gRPC client**:
+```bash
+# Run the example gRPC subscription client
+cargo run --example test_grpc_subscription
+```
+
+**Response Format**:
+```protobuf
+message UserUpdate {
+  User user = 1;
+  string update_type = 2;
+  int64 timestamp = 3;
+}
+```
+
+The streaming subscription continuously sends `UserUpdate` messages with:
+- User information (id, name, email, age)
+- Update type (profile_update, activity_update, status_update)
+- Unix timestamp
+- Counter for tracking updates
+
+## Subscription Comparison
+
+The gateway supports two different subscription mechanisms:
+
+| Feature | JSON-RPC WebSocket | gRPC Streaming |
+|---------|-------------------|----------------|
+| Protocol | WebSocket over HTTP | gRPC streaming RPC |
+| Transport | JSON text | Protocol Buffers binary |
+| Connection | Single bidirectional connection | Persistent streaming connection |
+| Message Format | JSON-RPC 2.0 | Protocol Buffers |
+| Use Case | Web applications, browser clients | High-performance services, microservices |
+| Example Client | `cargo run --example test_jsonrpc_ws` | `cargo run --example test_grpc_subscription` |
+
+Both subscription types provide:
+- Real-time updates at configurable intervals
+- User-specific data streams
+- Automatic reconnection handling
+- Efficient message delivery
 
 ## Quick Start
 
