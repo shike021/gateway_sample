@@ -85,7 +85,7 @@ pub fn create_rpc_module() -> RpcModule<()> {
                         "user_id": user_id,
                         "name": format!("User {}", user_id),
                         "email": format!("user{}@example.com", user_id),
-                        "age": 30 + (counter % 10) as i32,
+                        "age": 30 + (counter % 10),
                         "update_type": update_type,
                         "timestamp": timestamp,
                         "counter": counter

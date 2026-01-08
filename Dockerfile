@@ -21,9 +21,9 @@ WORKDIR /app
 COPY --from=builder /usr/src/app/target/release/omni-gate-rs /app/omni-gate-rs
 
 # Copy configuration file if it exists (optional)
-COPY config.json /app/config.json
+COPY config.toml /app/config.toml
 
 EXPOSE 3000
-EXPOSE 50051
+EXPOSE 5000
 
 CMD ["./omni-gate-rs"]
