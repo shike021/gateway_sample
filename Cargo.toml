@@ -1,5 +1,5 @@
 [package]
-name = "axum_gateway"
+name = "omni-gate-rs"
 version = "0.1.0"
 edition = "2021"
 

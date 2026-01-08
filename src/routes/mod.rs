@@ -8,15 +8,13 @@
 
 use axum::Router;
 
-pub mod rest;
 pub mod health;
 pub mod json_rpc;
+pub mod rest;
 
 /// Integrate all routes
 pub fn app_routes() -> Router<crate::server::AppState> {
-    Router::new()
-        .merge(health_routes())
-        .merge(rest_routes())
+    Router::new().merge(health_routes()).merge(rest_routes())
 }
 
 /// Get health routes

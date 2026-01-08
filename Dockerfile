@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy the binary from the builder stage
-COPY --from=builder /usr/src/app/target/release/axum_gateway /app/axum_gateway
+COPY --from=builder /usr/src/app/target/release/omni-gate-rs /app/omni-gate-rs
 
 # Copy configuration file if it exists (optional)
 COPY config.json /app/config.json
@@ -26,4 +26,4 @@ COPY config.json /app/config.json
 EXPOSE 3000
 EXPOSE 50051
 
-CMD ["./axum_gateway"]
+CMD ["./omni-gate-rs"]

@@ -23,7 +23,6 @@ use crate::routes;
 /// Application state
 pub type AppState = routes::rest::AppState;
 
-
 /// Start the server
 pub async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
     // Load configuration

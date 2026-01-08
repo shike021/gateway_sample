@@ -24,7 +24,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "username": "testuser",
         "password": "testpass"
     });
-    let result: serde_json::Value = client.request("verify_credentials", json!([params])).await?;
+    let result: serde_json::Value = client
+        .request("verify_credentials", json!([params]))
+        .await?;
     println!("verify_credentials result: {}", result);
 
     println!("Test completed!");

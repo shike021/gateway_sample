@@ -14,11 +14,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "interval_seconds": 2
     });
 
-    let mut sub = client.subscribe(
-        "subscribe_user_updates",
-        params,
-        "unsubscribe_user_updates",
-    ).await?;
+    let mut sub = client
+        .subscribe("subscribe_user_updates", params, "unsubscribe_user_updates")
+        .await?;
 
     println!("Receiving updates:");
     let mut count = 0;
